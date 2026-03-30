@@ -9,3 +9,5 @@ local function getFreeItemID(startID, endID)
      end
     return nil
 end
+
+local freeId = getFreeItemID(256, 511)

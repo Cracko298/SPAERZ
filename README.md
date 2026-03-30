@@ -19,3 +19,8 @@
    - Make sure you are using at least `LunaCore v0.19.X`.
    - If you haven't properly installed [LunaCore](https://github.com/STBrian/LunaCore/releases/latest) and [LunaCoreAPI](https://github.com/STBrian/LunaCoreAPI/archive/refs/heads/main.zip).
    - And install `LunaCoreAPI` as you did with `SPAERZ`.
+
+## Credit(s):
+- [Cracko298](https://github.com/Cracko298) - Main Developer of Mod.
+- [STBrian](https://github.com/STBrian) - LunaCoreAPI/LunaCore, Question(s), and References.
+- [DamiansStupidCodeLMAO](https://github.com/DamiansStupidCodeLMAO) - Used their Script(s) for Script References.

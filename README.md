@@ -15,4 +15,7 @@
 ## Installing the Mod:
 1. Download the Generated `*.zip` from [Here](https://github.com/Cracko298/SPAERZ/archive/refs/heads/main.zip).
    - And extract the downloaded `*.zip` File.
-2. 
+2. Drag and Drop the Contents of the `*.zip` File into: `sdmc:/Minecraft 3DS/mods/`.
+   - Make sure you are using at least `LunaCore v0.19.X`.
+   - If you haven't properly installed [LunaCore](https://github.com/STBrian/LunaCore/releases/latest) and [LunaCoreAPI](https://github.com/STBrian/LunaCoreAPI/archive/refs/heads/main.zip).
+   - And install `LunaCoreAPI` as you did with `SPAERZ`.

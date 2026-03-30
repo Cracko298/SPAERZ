@@ -21,6 +21,6 @@
    - And install `LunaCoreAPI` as you did with `SPAERZ`.
 
 ## Credit(s):
-- [Cracko298](https://github.com/Cracko298) - Main Developer of Mod.
+- [Cracko298](https://github.com/Cracko298) - Main Developer of SPAERZ (Spears Mod).
 - [STBrian](https://github.com/STBrian) - LunaCoreAPI/LunaCore, Question(s), and References.
 - [DamiansStupidCodeLMAO](https://github.com/DamiansStupidCodeLMAO) - Used their Script(s) for Script References.

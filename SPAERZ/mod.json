@@ -1,6 +1,6 @@
 {
     "name": "SPAERZ",
     "description": "Backports Spears into Minecraft 3DS Edition.",
-    "version": "1.5.8",
+    "version": "1.7.9",
     "dependencies": ["LunaCoreAPI"]
 }

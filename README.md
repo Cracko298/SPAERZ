@@ -28,6 +28,6 @@
 ## Known Bug(s):
 | Priority | Description |
 |-------|-----------|
-| Low | Sometimes the user-input for the "Dash/Lunge" ability. |
+| Low | Sometimes the user-input for the "Dash/Lunge" ability doesn't register. |
 | High | The game sometimes crashes when user isn't moving and uses "Dash/Lunge" ability. |
 | Mid | If the Player Jumps without moving, it may launch player high(er) into the Air. |

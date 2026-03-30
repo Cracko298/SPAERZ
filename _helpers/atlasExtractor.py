@@ -6,8 +6,6 @@ OUTPUT_DIR = "extracted_spears"
 GRID_PREVIEW_PATH = "atlas_grid_preview.png"
 
 TILE_SIZE = 16
-
-# Put your tile positions here as:
 SPEAR_TILES = {
     "wooden_spear":  (35, 2),
     "stone_spear":   (33, 2),
@@ -16,11 +14,8 @@ SPEAR_TILES = {
     "diamond_spear": (50, 1),
 }
 
-# If True, trims away solid black border around the cropped tile
 TRIM_BLACK_BORDER = True
 
-
-# Helpers
 def is_black(pixel):
     if isinstance(pixel, int):
         return pixel == 0
@@ -67,13 +62,11 @@ def make_grid_preview(atlas, tile_size, out_path):
     except Exception:
         font = None
 
-    # draw grid
     for x in range(0, width, tile_size):
         draw.line((x, 0, x, height), fill=(0, 255, 0))
     for y in range(0, height, tile_size):
         draw.line((0, y, width, y), fill=(0, 255, 0))
 
-    # label tiles
     for ty in range(tiles_y):
         for tx in range(tiles_x):
             px = tx * tile_size + 1
@@ -93,7 +86,6 @@ def crop_tile(atlas, tx, ty, tile_size):
     return atlas.crop((left, top, right, bottom))
 
 
-# Main Function
 def main():
     os.makedirs(OUTPUT_DIR, exist_ok=True)
 

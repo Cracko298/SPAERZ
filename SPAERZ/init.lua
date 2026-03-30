@@ -149,222 +149,272 @@ spearsModReg:buildResources()
 -- Spear Logic System
 local SPEAR_RUNTIME = {
     spearBaseDamage = {
-        [70]  = 1,
-        [71]  = 1,
-        [79]  = 2,
-        [87]  = 1,
-        [130] = 3
+        [WOODEN_SPEAR.ID]  = 2, -- wooden_spear
+        [STONE_SPEAR.ID]  = 2, -- stone_spear
+        [IRON_SPEAR.ID]  = 3, -- iron_spear
+        [GOLD_SPEAR.ID]  = 2, -- golden_spear
+        [DIAMOND_SPEAR.ID] = 4  -- diamond_spear
     },
 
-    damageMultiplier = 6.0,
-    dashStrength     = 2.6,
-    dashDuration     = 0.10,
-    dashCooldown     = 3.00,
+    DAMAGE_BONUS_OFFSET = 0xAC,
 
-    dashActive       = false,
-    dashEndTime      = 0,
-    nextDashTime     = 0,
+    velocityDamageMultiplier = 6.0,
+    survivalDashMultiplier   = 15.0,
+    creativeDashMultiplier   = 5.0,
+    dashDuration             = 0.2,
+    survivalDashCooldown     = 3.00,
+    creativeDashCooldown     = 1.00,
+    loopDelay                = 0.01,
 
-    lastItemPtr      = nil,
-    lastDamageAddr   = nil,
-    lastBaseDamage   = nil
+    dashActive               = false,
+    dashEndTime              = 0,
+    nextDashTime             = 0,
+
+    started                  = false,
+
+    lastItemId               = nil,
+    lastItemPtr              = nil,
+    lastDamageAddr           = nil,
+    lastBaseDamage           = nil,
+    lastAppliedDamage        = nil,
+    cooldownNoticeTime       = 0
 }
 
-local function _floor(n)
-    return math.floor(n)
+local function roundNumber(v)
+    return math.floor(v + 0.5)
 end
 
-local function _clampToU32(n)
-    if n < 0 then
-        return 0
+local function getItemPointerFromUserdata(item)
+    if not item then
+        return nil
     end
-    if n > 0xFFFFFFFF then
-        return 0xFFFFFFFF
+
+    local s = tostring(item)
+    if not s then
+        return nil
     end
-    return n
+
+    local hex = s:match("userdata:%s*(0x%x+)")
+    if hex then
+        return tonumber(hex)
+    end
+
+    hex = s:match("userdata:%s*(%x+)")
+    if hex then
+        return tonumber(hex, 16)
+    end
+
+    return nil
 end
 
-local function _getHeldItem()
+local function isCreativeOrFlying()
+    return Game.LocalPlayer.Gamemode == 1 and Game.LocalPlayer.Flying
+end
+
+local function getDashSettings()
+    if isCreativeOrFlying() then
+        return SPEAR_RUNTIME.creativeDashMultiplier, SPEAR_RUNTIME.creativeDashCooldown
+    end
+
+    return SPEAR_RUNTIME.survivalDashMultiplier, SPEAR_RUNTIME.survivalDashCooldown
+end
+
+local function getHeldSpearInfo()
+    if not Game.LocalPlayer.Loaded or not Game.World.Loaded then
+        return nil
+    end
+
     local hand = Game.LocalPlayer.Inventory.Slots["hand"]
-    if not hand then
+    if not hand or hand:isEmpty() or not hand.Item then
         return nil
     end
-    if hand:isEmpty() then
+
+    local item = hand.Item
+    local itemId = item.ID
+    local baseDamage = SPEAR_RUNTIME.spearBaseDamage[itemId]
+
+    if not baseDamage then
         return nil
     end
-    return hand.Item
+
+    return item, itemId, baseDamage
 end
 
-local function _isHeldItemSpear(item)
-    if not item then
-        return false
-    end
-    return SPEAR_RUNTIME.spearBaseDamage[item.ID] ~= nil
-end
-
-local function _getHeldSpearBaseDamage(item)
-    if not item then
-        return nil
-    end
-    return SPEAR_RUNTIME.spearBaseDamage[item.ID]
-end
-
-local function _getRealItemPointer(item)
-    if not item then
-        return nil
+local function resolveDamageAddress(item, itemId, baseDamage)
+    if SPEAR_RUNTIME.lastItemId == itemId and SPEAR_RUNTIME.lastDamageAddr then
+        return SPEAR_RUNTIME.lastDamageAddr
     end
 
-    local userdataHex = tostring(item):match("userdata: (.+)")
-    if not userdataHex then
-        return nil
-    end
-
-    local userdataAddr = tonumber(userdataHex, 16)
-    if not userdataAddr then
-        return nil
-    end
-
-    return Core.Memory.readU32(userdataAddr)
-end
-
-local function _getDamageBonusAddress(item)
-    local itemPtr = _getRealItemPointer(item)
+    local itemPtr = getItemPointerFromUserdata(item)
     if not itemPtr then
-        return nil, nil
+        Core.Debug.log("[SPAERZ] Failed to resolve item pointer for item ID " .. tostring(itemId))
+        return nil
     end
-    return itemPtr + 0xAC, itemPtr
+
+    local damageAddr = itemPtr + SPEAR_RUNTIME.DAMAGE_BONUS_OFFSET
+
+    SPEAR_RUNTIME.lastItemId = itemId
+    SPEAR_RUNTIME.lastItemPtr = itemPtr
+    SPEAR_RUNTIME.lastDamageAddr = damageAddr
+    SPEAR_RUNTIME.lastBaseDamage = baseDamage
+    SPEAR_RUNTIME.lastAppliedDamage = nil
+
+    Core.Debug.log(string.format(
+        "[SPAERZ] Bound spear item ID %d -> ptr 0x%08X -> damage addr 0x%08X",
+        itemId, itemPtr, damageAddr
+    ))
+
+    return damageAddr
 end
 
-local function _getHorizontalSpeed()
-    local vx, vy, vz = Game.LocalPlayer.Velocity.get()
-    vx = vx or 0.0
-    vz = vz or 0.0
-    return math.sqrt((vx * vx) + (vz * vz)), vx, vy or 0.0, vz
+local function restoreLastBaseDamage()
+    if SPEAR_RUNTIME.lastDamageAddr and SPEAR_RUNTIME.lastBaseDamage then
+        if SPEAR_RUNTIME.lastAppliedDamage ~= SPEAR_RUNTIME.lastBaseDamage then
+            Core.Memory.writeU32(SPEAR_RUNTIME.lastDamageAddr, SPEAR_RUNTIME.lastBaseDamage)
+            SPEAR_RUNTIME.lastAppliedDamage = SPEAR_RUNTIME.lastBaseDamage
+        end
+    end
 end
 
-local function _writeHeldSpearDamageBonus(newBonus)
-    local heldItem = _getHeldItem()
-    if not _isHeldItemSpear(heldItem) then
+local function applyHeldSpearDamage(damageValue)
+    local item, itemId, baseDamage = getHeldSpearInfo()
+    if not item then
+        restoreLastBaseDamage()
         return false
     end
 
-    local damageAddr, itemPtr = _getDamageBonusAddress(heldItem)
+    local damageAddr = resolveDamageAddress(item, itemId, baseDamage)
     if not damageAddr then
         return false
     end
 
-    newBonus = _clampToU32(_floor(newBonus))
-    local ok = Core.Memory.writeU32(damageAddr, newBonus)
+    local finalDamage = math.max(0, roundNumber(damageValue))
 
-    if ok then
-        SPEAR_RUNTIME.lastItemPtr = itemPtr
-        SPEAR_RUNTIME.lastDamageAddr = damageAddr
-        SPEAR_RUNTIME.lastBaseDamage = _getHeldSpearBaseDamage(heldItem)
+    if SPEAR_RUNTIME.lastAppliedDamage ~= finalDamage then
+        Core.Memory.writeU32(damageAddr, finalDamage)
+        SPEAR_RUNTIME.lastAppliedDamage = finalDamage
     end
 
-    return ok
+    return true
 end
 
-local function _restoreHeldSpearBaseDamage()
-    local heldItem = _getHeldItem()
-    if not _isHeldItemSpear(heldItem) then
-        return
-    end
+local function getVelocityMagnitudeAllDirections()
+    local vx, vy, vz = Game.LocalPlayer.Velocity.get()
+    vx = vx or 0.0
+    vy = vy or 0.0
+    vz = vz or 0.0
 
-    local base = _getHeldSpearBaseDamage(heldItem)
-    if not base then
-        return
-    end
-
-    _writeHeldSpearDamageBonus(base)
+    return math.sqrt((vx * vx) + (vy * vy) + (vz * vz)), vx, vy, vz
 end
 
-local function _doDash()
+local function performDash()
     local now = Core.System.getTime()
 
     if now < SPEAR_RUNTIME.nextDashTime then
+        if now >= SPEAR_RUNTIME.cooldownNoticeTime then
+            local remaining = SPEAR_RUNTIME.nextDashTime - now
+            Core.Debug.message(string.format("Dash cooldown: %.1fs", remaining))
+            SPEAR_RUNTIME.cooldownNoticeTime = now + 0.5
+        end
         return
     end
 
-    local heldItem = _getHeldItem()
-    if not _isHeldItemSpear(heldItem) then
+    local item = getHeldSpearInfo()
+    if not item then
         return
     end
 
-    local speed, vx, vy, vz = _getHorizontalSpeed()
+    local dashMultiplier, dashCooldown = getDashSettings()
+    local mag, vx, vy, vz = getVelocityMagnitudeAllDirections()
 
-    local dx, dz
-    if speed > 0.001 then
-        dx = vx / speed
-        dz = vz / speed
-    else
-        dx = 0.0
-        dz = 1.0
+    if mag < 0.01 then
+        local yaw = Game.LocalPlayer.Camera.Yaw or 0.0
+        local yawRad = math.rad(yaw)
+        vx = -math.sin(yawRad)
+        vz =  math.cos(yawRad)
+        vy = 0.0
     end
 
-    Game.LocalPlayer.Velocity.add(
-        dx * SPEAR_RUNTIME.dashStrength,
-        0.0,
-        dz * SPEAR_RUNTIME.dashStrength
+    Game.LocalPlayer.Velocity.set(
+        vx * dashMultiplier,
+        vy * dashMultiplier,
+        vz * dashMultiplier
     )
 
     SPEAR_RUNTIME.dashActive = true
     SPEAR_RUNTIME.dashEndTime = now + SPEAR_RUNTIME.dashDuration
-    SPEAR_RUNTIME.nextDashTime = now + SPEAR_RUNTIME.dashCooldown
+    SPEAR_RUNTIME.nextDashTime = now + dashCooldown
 
-    Core.Debug.log("[SPAERZ] Dash used. Cooldown until " .. tostring(SPEAR_RUNTIME.nextDashTime))
+    if isCreativeOrFlying() then
+        Core.Debug.log("[SPAERZ] Creative dash used (half power, 1s cooldown)")
+    else
+        Core.Debug.log("[SPAERZ] Survival dash used (full power, 3s cooldown)")
+    end
 end
 
-local function updateSpearVelocityDamage()
-    if not Game.LocalPlayer.Loaded then
-        return
-    end
-
-    local heldItem = _getHeldItem()
-    if not _isHeldItemSpear(heldItem) then
+function mainLogicFunction()
+    if not Game.LocalPlayer.Loaded or not Game.World.Loaded then
+        restoreLastBaseDamage()
         return
     end
 
     local now = Core.System.getTime()
+
+    local item, itemId, baseDamage = getHeldSpearInfo()
+    if item and Game.Gamepad.isDown(Game.Gamepad.KeyCodes.L) then
+        performDash()
+    end
 
     if SPEAR_RUNTIME.dashActive and now >= SPEAR_RUNTIME.dashEndTime then
         SPEAR_RUNTIME.dashActive = false
     end
 
-    if Game.Gamepad.isPressed(Game.Gamepad.KeyCodes.L) then
-        _doDash()
-    end
-
-    if Game.Gamepad.isDown(Game.Gamepad.KeyCodes.R) then
-        local baseDamage = _getHeldSpearBaseDamage(heldItem)
-        if baseDamage then
-            local horizSpeed = _getHorizontalSpeed()
-            local scaledBonus = _floor(horizSpeed * SPEAR_RUNTIME.damageMultiplier)
-            local finalDamageBonus = baseDamage + scaledBonus
-
-            _writeHeldSpearDamageBonus(finalDamageBonus)
-        end
+    if item and Game.Gamepad.isDown(Game.Gamepad.KeyCodes.R) then
+        local speedMagnitude = getVelocityMagnitudeAllDirections()
+        local boostedDamage = baseDamage + (speedMagnitude * SPEAR_RUNTIME.velocityDamageMultiplier)
+        applyHeldSpearDamage(boostedDamage)
     else
-        _restoreHeldSpearBaseDamage()
+        restoreLastBaseDamage()
     end
 end
 
 local function startSpearVelocitySystem()
+    if SPEAR_RUNTIME.started then
+        return
+    end
+
+    SPEAR_RUNTIME.started = true
+
     Async.run(function()
         while true do
-            updateSpearVelocityDamage()
-            Async.wait(0.01) -- ~10ms polling
+            mainLogicFunction()
+            Async.wait(SPEAR_RUNTIME.loopDelay)
         end
     end)
+
+    Core.Debug.message("SPAERZ runtime started.")
 end
 
 local rootFolder = Core.Menu.getMenuFolder()
 local mainFolder = rootFolder:newFolder("SPAERZ (Spears)")
+
 mainFolder:newEntry("Credit(s)", function()
     Core.Menu.showMessageBox("Modname(s): SPAERZ\nDeveloper: Cracko298\n\nRelease Build")
 end)
 
+mainFolder:newEntry("Start Spear Runtime Manually", function()
+    startSpearVelocitySystem()
+    Core.Debug.log("[SPAERZ] Started SPAERZ Runtime Loop.", true)
+end)
+
+Game.World.OnWorldJoin:Connect(function()
+    startSpearVelocitySystem()
+end)
+
+Game.World.OnWorldLeave:Connect(function()
+    restoreLastBaseDamage()
+end)
+
 if Game.LocalPlayer.Loaded and Game.World.Loaded then
-    Core.Debug.message("SPAERZ has Loaded.")
     startSpearVelocitySystem()
 end

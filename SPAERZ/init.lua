@@ -37,6 +37,18 @@ DiamondTier.MiningEfficiency = 8
 DiamondTier.DamageBonus = 3
 DiamondTier.Enchantability = 10
 
+-- Basically a Helper Function for me to Find Freed ID's
+--local function getFreeItemID(startID, endID)
+  --  for id = startID, endID do
+    --    local item = Game.Items.findItemByID(id)
+      --  if item == nil then
+        --    Core.Debug.log("[SPAERZ] Free real ID found: " .. id .. " | Returning: " .. (id - 256))
+          --  return id - 256
+      --  end
+    -- end
+  --  return nil
+--end
+
 -- Defs for registering my Spears \(^-^)/
 local WOODEN_SPEAR = spearsModReg:registerItem("wooden_spear", 70, {
     texture = "items/wooden_spear.3dst",
@@ -392,10 +404,11 @@ end)
 
 mainFolder:newEntry("Start Spear Runtime Manually", function()
     startSpearVelocitySystem()
-    Core.Debug.log("[SPAERZ] Started SPAERZ Runtime Loop.", true)
+    Core.Debug.log("[SPAERZ] Started SPAERZ Runtime Loop Manually.", true)
 end)
 
 Game.World.OnWorldJoin:Connect(function()
+    Core.Debug.log("[SPAERZ] Started SPAERZ Runtime Loop.", true)
     startSpearVelocitySystem()
 end)
 
@@ -404,5 +417,6 @@ Game.World.OnWorldLeave:Connect(function()
 end)
 
 if Game.LocalPlayer.Loaded and Game.World.Loaded then
+    Core.Debug.log("[SPAERZ] Started SPAERZ Runtime Loop (Ignore this Log).")
     startSpearVelocitySystem()
 end

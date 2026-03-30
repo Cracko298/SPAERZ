@@ -1,5 +1,5 @@
 # SPAERZ
-- A LunaCore Mod that adds the Spear Weapons to Minecraft 3DS.
+- A LunaCore Mod that adds the Spear Weapon Type(s) to Minecraft 3DS.
 
 ## The Basic(s):
 - Adds the spear weapon(s) to Minecraft 3DS Edition.

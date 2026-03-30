@@ -24,3 +24,10 @@
 - [Cracko298](https://github.com/Cracko298) - Main Developer of SPAERZ (Spears Mod).
 - [STBrian](https://github.com/STBrian) - LunaCoreAPI/LunaCore, Question(s), and References.
 - [DamiansStupidCodeLMAO](https://github.com/DamiansStupidCodeLMAO) - Used their Script(s) for Script References.
+
+## Known Bug(s):
+| Priority | Description |
+|-------|-----------|
+| Low | Sometimes the user-input for the "Dash/Lunge" ability. |
+| High | The game sometimes crashes when user isn't moving and uses "Dash/Lunge" ability. |
+| Medium | If the Player Jumps without moving, it may launch player high(er) into the Air. |

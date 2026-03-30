@@ -30,4 +30,4 @@
 |-------|-----------|
 | Low | Sometimes the user-input for the "Dash/Lunge" ability. |
 | High | The game sometimes crashes when user isn't moving and uses "Dash/Lunge" ability. |
-| Medium | If the Player Jumps without moving, it may launch player high(er) into the Air. |
+| Mid | If the Player Jumps without moving, it may launch player high(er) into the Air. |

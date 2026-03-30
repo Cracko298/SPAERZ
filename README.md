@@ -11,3 +11,8 @@
 - Varaible attack based on Speed (Standard Attack).
 - Adds lunge/dash when pressing "L" with a Spear in-hand (Increases Attack Damage for `0.2s`).
 - Creative Mode Flying and Spear adjusted as to not fly you at Mach-10.
+
+## Installing the Mod:
+1. Download the Generated `*.zip` from [Here](https://github.com/Cracko298/SPAERZ/archive/refs/heads/main.zip).
+   - And extract the downloaded `*.zip` File.
+2. 

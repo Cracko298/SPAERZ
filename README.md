@@ -32,5 +32,5 @@
 | Mid | Memory Usage fluctuates alot when using SPAERZ in-game/World (~350k -> ~1.6mil). May just be how MC3DS works with memory allocation. |
 
 ## Fixed Bug(s):
-- Dash/Lunge not registering when it's supposed to.
-- Launching the Player into the Air when Jumping.
+- Dash/Lunge not registering when it's supposed to (Since `v1.8.4`).
+- Launching the Player into the Air when Jumping (Since `v1.8.4`).

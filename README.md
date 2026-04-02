@@ -28,7 +28,9 @@
 ## Known Bug(s):
 | Priority | Description |
 |-------|-----------|
-| Low | Sometimes the user-input for the "Dash/Lunge" ability doesn't register 100% of the time. |
-| High | The game sometimes crashes when Player isn't moving and uses "Dash/Lunge" ability. |
-| Mid | If the Player Jumps without moving and uses the "Dash/Lunge" ability, it may launch player high(er) into the Air, possibly killing them. |
+| Mid | The game sometimes crashes when Player isn't moving and uses "Dash/Lunge" ability. |
 | Mid | Memory Usage fluctuates alot when using SPAERZ in-game/World (~350k -> ~1.6mil). May just be how MC3DS works with memory allocation. |
+
+## Fixed Bug(s):
+- Dash/Lunge not registering when it's supposed to.
+- Launching the Player into the Air when Jumping.

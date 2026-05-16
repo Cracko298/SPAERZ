@@ -19,6 +19,7 @@
    - Make sure you are using at least `LunaCore v0.19.X`.
    - If you haven't properly installed [LunaCore](https://github.com/STBrian/LunaCore/releases/latest) and [LunaCoreAPI](https://github.com/STBrian/LunaCoreAPI/archive/refs/heads/main.zip).
    - And install `LunaCoreAPI` as you did with `SPAERZ`.
+3. You will need to extract your own UVs Mapping Files. And put them into the `romfs` folder when patching.
 
 ## Credit(s):
 - [Cracko298](https://github.com/Cracko298) - Main Developer of SPAERZ (Spears Mod).
